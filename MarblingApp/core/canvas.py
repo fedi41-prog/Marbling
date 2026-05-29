@@ -17,26 +17,6 @@ class Canvas:
         # polygon-bereiche
         self.shapes = []
 
-    def add_drop(self, pos, radius, color=COLOR, resolution=100):
-
-        # erst alle existierenden verformen
-        if len(self.vertices) > 0:
-            Effector.marble(self.vertices, np.array(pos), radius)
-
-        # neue vertices erzeugen
-        verts = generate_circle_vertices(pos, radius, resolution).astype(np.float32)
-
-        start = len(self.vertices)
-        end = start + len(verts)
-
-        # anhängen
-        self.vertices = np.vstack((self.vertices, verts))
-
-        # polygon merken
-        self.shapes.append((start, end, color))
-
-        self.subdivide_all()
-
     def draw(self, polygon_function):
 
         for start, end, color in self.shapes:

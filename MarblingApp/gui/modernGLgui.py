@@ -1,10 +1,11 @@
 import pygame
 import moderngl
-import numpy as np
-import mapbox_earcut as earcut
 
+
+from MarblingApp.core.brushes import BrushManager
 from MarblingApp.core.colors import PURPLE_PALETTE
 from MarblingApp.core.canvas import Canvas
+from MarblingApp.gui.shader import triangulate_polygon, create_circle, create_dashed_circle
 from MarblingApp.monitoring.performance_logger import PerformanceLogger
 
 SCREEN_WIDTH = 1200
@@ -13,6 +14,15 @@ SCREEN_HEIGHT = 800
 BG_COLOR = (10/255, 13/255, 20/255)
 
 COLOR_PALETTE = PURPLE_PALETTE
+
+def normalize(points):
+    points = points.astype("f4").copy()
+
+    points[:, 0] = (points[:, 0] / SCREEN_WIDTH) * 2.0 - 1.0
+    points[:, 1] = 1.0 - (points[:, 1] / SCREEN_HEIGHT) * 2.0
+
+    return points
+
 
 
 pygame.init()
@@ -48,79 +58,27 @@ program = ctx.program(
     fragment_shader="""
         #version 330
         
-        uniform int debug_mode;
         uniform vec3 color;
 
         out vec4 fragColor;
 
         void main() {
-
-            if(debug_mode == 1)
-                fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-            else
-                fragColor = vec4(color, 1.0);
+            fragColor = vec4(color, 1.0);
         }
     """
 )
 
 
-def normalize(points):
-    points = points.astype("f4").copy()
 
-    points[:, 0] = (points[:, 0] / SCREEN_WIDTH) * 2.0 - 1.0
-    points[:, 1] = 1.0 - (points[:, 1] / SCREEN_HEIGHT) * 2.0
-
-    return points
-
-
-def triangulate_polygon(points):
-
-    vertices = points.astype("f4")
-
-    rings = np.array([len(vertices)], dtype=np.uint32)
-
-    indices = earcut.triangulate_float32(
-        vertices,
-        rings
-    )
-
-    return vertices, indices
 
 def main():
 
     canvas = Canvas()
     performance_logger = PerformanceLogger()
+    brush_manager = BrushManager(canvas)
+    brush_manager.set_brush_id(0)
 
-
-
-    canvas.add_drop(
-        (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
-        100,
-        resolution=300
-    )
-    canvas.add_drop(
-        (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2),
-        100,
-        resolution=300
-    )
-
-
-
-    def new_drop(pos, radius,
-                 color=(60, 120, 60),
-                 resolution=300):
-        canvas.add_drop(
-            pos,
-            radius,
-            color,
-            resolution
-        )
-
-
-    current_color = COLOR_PALETTE.get_random()
-    drop_radius = 100
-
-
+    pressing_e = False
 
     clock = pygame.time.Clock()
     running = True
@@ -133,26 +91,21 @@ def main():
                 running = False
 
             if e.type == pygame.MOUSEBUTTONDOWN:
+                brush_manager.current_brush().on_click_lmb(pygame.mouse.get_pos())
 
-                current_color = COLOR_PALETTE.get_random()
+        # Input handling
+        if pygame.mouse.get_pressed(3)[0]:
+            brush_manager.current_brush().on_hold_lmb(pygame.mouse.get_pos())
+        keys = pygame.key.get_pressed()
 
-                new_drop(
-                    pygame.mouse.get_pos(),
-                    drop_radius,
-                    current_color
-                )
-
-
-
-
+        if not pressing_e and keys[pygame.K_e]: brush_manager.next_brush()
+        pressing_e = keys[pygame.K_e]
 
         # DRAW
-
         ctx.clear(*BG_COLOR)
 
+        # Render drops
         for poly, color in canvas.get_polygons():
-
-            triangles = triangulate_polygon(poly)
 
             vertices, indices = triangulate_polygon(poly)
 
@@ -173,19 +126,26 @@ def main():
                 color[2] / 255
             )
 
-            program["debug_mode"] = 0
             vao.render(moderngl.TRIANGLES)
 
-            program["debug_mode"] = 1
+            #program["color"] = (1,0,0)
             #vao.render(moderngl.POINTS)
-
             #vao.render(moderngl.LINES)
 
             vbo.release()
             vao.release()
 
+        # Cursor
+        circle = normalize(create_dashed_circle(pygame.mouse.get_pos(), 100))
 
-        #pygame.draw.circle(screen, (255,255,255), pygame.mouse.get_pos(), drop_radius, 1)
+        vbo = ctx.buffer(circle)
+        vao = ctx.simple_vertex_array(program, vbo, "in_vert")
+
+        program["color"] = (1.0, 1.0, 1.0)
+        vao.render(mode=moderngl.POINTS)
+
+
+
 
         pygame.display.flip()
 
@@ -200,8 +160,8 @@ def main():
     pygame.quit()
 
 
-    if input() != "":
-        performance_logger.save("monitoring/performance_data.npy")
+    #if input() != "":
+    #    performance_logger.save("monitoring/performance_data.npy")
 
 
 if __name__ == '__main__':
