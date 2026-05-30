@@ -11,6 +11,40 @@ def generate_circle_vertices(pos, radius, resolution):
 
     return np.column_stack((x, y))
 
+def generate_star_vertices(center, outer_radius, inner_radius, points=5, resolution=10):
+    cx, cy = center
+
+    # Eckpunkte erzeugen
+    vertices = []
+
+    for i in range(points * 2):
+        angle = i * np.pi / points - np.pi / 2
+
+        if i % 2 == 0:
+            r = outer_radius
+        else:
+            r = inner_radius
+
+        x = cx + np.cos(angle) * r
+        y = cy + np.sin(angle) * r
+
+        vertices.append([x, y])
+
+    vertices = np.array(vertices, dtype=np.float32)
+
+    # Kanten auffüllen
+    result = []
+
+    for i in range(len(vertices)):
+        a = vertices[i]
+        b = vertices[(i + 1) % len(vertices)]
+
+        t = np.linspace(0, 1, resolution, endpoint=False)
+        edge = a + (b - a) * t[:, None]
+
+        result.extend(edge)
+
+    return np.array(result, dtype=np.float32)
 
 
 

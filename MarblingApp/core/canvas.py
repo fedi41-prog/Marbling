@@ -41,7 +41,7 @@ class Canvas:
         return len(self.shapes)
 
     def after_effect(self):
-        self.__subdivide_all(5)
+        self.__subdivide_all(1)
         self.dirty = True
 
     def reset_dirty_flag(self):

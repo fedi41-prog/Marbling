@@ -1,7 +1,7 @@
 import numpy as np
 
 from MarblingApp.core.effector import Effector
-from MarblingApp.core.util import generate_circle_vertices
+from MarblingApp.core.util import generate_circle_vertices, generate_star_vertices
 
 
 class Brush:
@@ -53,7 +53,7 @@ class DynamicDropBrush(Brush):
         self.canvas.after_effect()
 
 
-class InstantDropBrush(Brush):
+class CircleBrush(Brush):
     def on_click_lmb(self, pos):
         # erst alle existierenden verformen
         if len(self.canvas.vertices) > 0:
@@ -72,10 +72,31 @@ class InstantDropBrush(Brush):
         self.canvas.shapes.append((start, end, self.color))
 
         self.canvas.after_effect()
+
 class OverlayDropBrush(Brush):
     def on_click_lmb(self, pos):
         # neue vertices erzeugen
         verts = generate_circle_vertices(pos, self.radius, 200).astype(np.float32)
+
+        start = len(self.canvas.vertices)
+        end = start + len(verts)
+
+        # anhängen
+        self.canvas.vertices = np.vstack((self.canvas.vertices, verts))
+
+        # polygon merken
+        self.canvas.shapes.append((start, end, self.color))
+
+        self.canvas.after_effect()
+
+class StarBrush(Brush):
+    def on_click_lmb(self, pos):
+        # erst alle existierenden verformen
+        if len(self.canvas.vertices) > 0:
+            Effector.marble(self.canvas.vertices, np.array(pos), self.radius)
+
+        # neue vertices erzeugen
+        verts = generate_star_vertices(pos, self.radius, self.radius/2.5, 5, 200)
 
         start = len(self.canvas.vertices)
         end = start + len(verts)
@@ -135,11 +156,10 @@ class CurrentBrush:
 
         self._current_id = 0
         self._brushes = [
-            InstantDropBrush(canvas),
-            DynamicDropBrush(canvas),
+            CircleBrush(canvas),
             OverlayDropBrush(canvas),
-            ExpandBrush(canvas),
-            TineLineBrush(canvas)
+            StarBrush(canvas),
+            ExpandBrush(canvas)
         ]
 
     def update_brushes(self):
