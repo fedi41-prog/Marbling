@@ -1,4 +1,4 @@
-from MarblingApp.gui.modernGLgui import main
+from MarblingApp.gui.shader import main
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+from MarblingApp.core.brushes import CurrentBrush
 from MarblingApp.core.effector import Effector
 from MarblingApp.core.util import generate_circle_vertices, subdivide_polygon
 import numpy as np
@@ -17,6 +18,10 @@ class Canvas:
         # polygon-bereiche
         self.shapes = []
 
+        self.dirty = False
+
+        self.current_brush = CurrentBrush(self)
+
     def draw(self, polygon_function):
 
         for start, end, color in self.shapes:
@@ -31,11 +36,18 @@ class Canvas:
             yield poly, color
 
     def vertex_count(self):
-        return self.vertices.size
+        return self.vertices.shape[0]
     def drop_count(self):
         return len(self.shapes)
 
-    def subdivide_all(self, max_dist=10):
+    def after_effect(self):
+        self.__subdivide_all(5)
+        self.dirty = True
+
+    def reset_dirty_flag(self):
+        self.dirty = False
+
+    def __subdivide_all(self, max_dist=10):
 
         new_vertices = []
         new_shapes = []

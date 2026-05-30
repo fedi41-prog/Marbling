@@ -1,6 +1,15 @@
 import numpy as np
 import mapbox_earcut as earcut
 
+def normalize(points, screen_width, screen_height):
+    points = points.astype("f4").copy()
+
+    points[:, 0] = (points[:, 0] / screen_width) * 2.0 - 1.0
+    points[:, 1] = 1.0 - (points[:, 1] / screen_height) * 2.0
+
+    return points
+
+
 def create_dashed_circle(pos, radius, resolution=256,
                          dash_length=6, gap_length=4):
 
@@ -31,7 +40,7 @@ def create_circle(center, radius, segments=64):
         y = center[1] + np.sin(angle) * radius
         vertices.append((x, y))
 
-    return np.array(vertices, dtype='f4')
+    return vertices
 
 def triangulate_polygon(points):
 

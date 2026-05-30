@@ -2,7 +2,6 @@ import numpy as np
 
 
 class Effector:
-
     @staticmethod
     def marble(vertices, pos, radius):
 

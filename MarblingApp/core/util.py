@@ -15,10 +15,6 @@ def generate_circle_vertices(pos, radius, resolution):
 
 
 def subdivide_polygon(points, max_dist):
-    """
-    points: (N,2) float32
-    """
-
     next_points = np.roll(points, -1, axis=0)
 
     edges = next_points - points
@@ -32,17 +28,17 @@ def subdivide_polygon(points, max_dist):
 
     mids = (points + next_points) * 0.5
 
-    result = np.empty((len(points) + np.count_nonzero(mask), 2), dtype=np.float32)
+    n = len(points)
 
-    write = 0
+    out_mask = np.ones(n + np.count_nonzero(mask), dtype=bool)
 
-    for i in range(len(points)):
+    insert_pos = np.where(mask)[0] + np.arange(np.count_nonzero(mask)) + 1
 
-        result[write] = points[i]
-        write += 1
+    out_mask[insert_pos] = False
 
-        if mask[i]:
-            result[write] = mids[i]
-            write += 1
+    result = np.empty((len(out_mask), 2), dtype=np.float32)
+
+    result[out_mask] = points
+    result[~out_mask] = mids[mask]
 
     return result

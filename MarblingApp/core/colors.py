@@ -18,3 +18,17 @@ PURPLE_PALETTE = ColorPalette(
         (165, 230, 186)
     ]
 )
+
+SUMMER_PALETTE = ColorPalette(
+    [
+        (237, 174, 73),
+        (209, 73, 91),
+        (0, 121, 140),
+        (48, 99, 142),
+        (0, 61, 91)
+    ]
+)
+
+WHITE_PALETTE = ColorPalette(
+    [(255,255,255)]
+)
