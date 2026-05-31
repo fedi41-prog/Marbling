@@ -71,24 +71,24 @@ void main()
     def render(self):
         if self.canvas.dirty:
             self.canvas.reset_dirty_flag()
+
             self.rebuild_canvas_mesh()
-
-
 
         # DRAW
 
         self.ctx.clear(*self.bg_color)
+        self.ctx.disable(moderngl.CULL_FACE)
 
         self.program["debug_mode"] = 0
         if self.canvas_vao is not None:
             self.canvas_vao.render(moderngl.TRIANGLES)
         self.render_cursor(self.canvas.current_brush.radius)
 
-        #if self.canvas_vao is not None:
-        #    self.program["debug_mode"] = 1
-        #    self.canvas_vao.render(moderngl.LINES)
-
-
+        # if self.canvas_vao is not None:
+        #     self.program["debug_mode"] = 1
+        #     self.canvas_vao.render(moderngl.LINES)
+        #
+        #
 
     def render_cursor(self, radius):
         circle_points1 = create_circle(pygame.mouse.get_pos(), radius)
@@ -121,45 +121,17 @@ void main()
         self.cursor_vao.render(moderngl.LINES, vertices=len(circle2))
 
     def rebuild_canvas_mesh(self):
+        print("rebuilding mesh")
 
-        all_vertices = []
-        all_indices = []
-        all_colors = []
 
-        vertex_offset = 0
-
-        for poly, color in self.canvas.get_polygons():
-            vertices, indices = triangulate_polygon(poly)
-
-            vertices = normalize(vertices, self.screen.get_width(), self.screen.get_height())
-
-            all_vertices.append(vertices)
-
-            all_indices.append(indices + vertex_offset)
-
-            color_arr = np.full(
-                (len(vertices), 3),
-                (
-                    color[0] / 255,
-                    color[1] / 255,
-                    color[2] / 255
-                ),
-                dtype=np.float32
-            )
-
-            all_colors.append(color_arr)
-
-            vertex_offset += len(vertices)
-
-        if not all_vertices:
-            self.canvas_vao = None
-            return
-
-        vertices = np.vstack(all_vertices).astype("f4")
-        colors = np.vstack(all_colors).astype("f4")
-        indices = np.concatenate(all_indices).astype("u4")
+        vertices = normalize(self.canvas.vertices.astype("f4"), self.screen.get_width(), self.screen.get_height())
+        colors = self.canvas.colors.astype("f4")
+        indices = self.canvas.indices.astype("u4")
 
         vertex_data = np.hstack((vertices, colors))
+
+        if vertex_data.size == 0:
+            return
 
         if hasattr(self, "canvas_vbo") and self.canvas_vbo is not None:
             self.canvas_vbo.release()

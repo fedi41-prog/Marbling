@@ -37,15 +37,9 @@ class DynamicDropBrush(Brush):
 
         # neue vertices erzeugen
         verts = generate_circle_vertices(pos, self.radius, 200).astype(np.float32)
+        self.canvas.add_shape(verts, self.color)
 
-        start = len(self.canvas.vertices)
-        end = start + len(verts)
-
-        # anhängen
-        self.canvas.vertices = np.vstack((self.canvas.vertices, verts))
-
-        # polygon merken
-        self.canvas.shapes.append((start, end, self.color))
+        self.canvas.after_effect()
 
         self.canvas.after_effect()
     def on_hold_lmb(self, pos):
@@ -60,16 +54,8 @@ class CircleBrush(Brush):
             Effector.marble(self.canvas.vertices, np.array(pos), self.radius)
 
         # neue vertices erzeugen
-        verts = generate_circle_vertices(pos, self.radius, 200).astype(np.float32)
-
-        start = len(self.canvas.vertices)
-        end = start + len(verts)
-
-        # anhängen
-        self.canvas.vertices = np.vstack((self.canvas.vertices, verts))
-
-        # polygon merken
-        self.canvas.shapes.append((start, end, self.color))
+        verts = generate_circle_vertices(pos, self.radius, 2000).astype(np.float32)
+        self.canvas.add_shape(verts, self.color)
 
         self.canvas.after_effect()
 
@@ -77,17 +63,10 @@ class OverlayDropBrush(Brush):
     def on_click_lmb(self, pos):
         # neue vertices erzeugen
         verts = generate_circle_vertices(pos, self.radius, 200).astype(np.float32)
-
-        start = len(self.canvas.vertices)
-        end = start + len(verts)
-
-        # anhängen
-        self.canvas.vertices = np.vstack((self.canvas.vertices, verts))
-
-        # polygon merken
-        self.canvas.shapes.append((start, end, self.color))
+        self.canvas.add_shape(verts, self.color)
 
         self.canvas.after_effect()
+
 
 class StarBrush(Brush):
     def on_click_lmb(self, pos):
@@ -97,15 +76,7 @@ class StarBrush(Brush):
 
         # neue vertices erzeugen
         verts = generate_star_vertices(pos, self.radius, self.radius/2.5, 5, 200)
-
-        start = len(self.canvas.vertices)
-        end = start + len(verts)
-
-        # anhängen
-        self.canvas.vertices = np.vstack((self.canvas.vertices, verts))
-
-        # polygon merken
-        self.canvas.shapes.append((start, end, self.color))
+        self.canvas.add_shape(verts, self.color)
 
         self.canvas.after_effect()
 
@@ -159,7 +130,8 @@ class CurrentBrush:
             CircleBrush(canvas),
             OverlayDropBrush(canvas),
             StarBrush(canvas),
-            ExpandBrush(canvas)
+            ExpandBrush(canvas),
+            TineLineBrush(canvas)
         ]
 
     def update_brushes(self):

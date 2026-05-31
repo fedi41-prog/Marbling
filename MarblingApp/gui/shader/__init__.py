@@ -78,8 +78,8 @@ def main():
 
         clock.tick(60)
 
-        #print(canvas.vertex_count(), canvas.drop_count(), clock.get_fps())
-        performance_logger.tick(clock.get_fps(), canvas.vertex_count(), canvas.drop_count())
+        print(canvas.vertex_count(), clock.get_fps())
+        #performance_logger.tick(clock.get_fps(), canvas.vertex_count(), canvas.drop_count())
 
     pygame.quit()
 
