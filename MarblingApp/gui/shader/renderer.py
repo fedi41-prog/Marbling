@@ -3,7 +3,8 @@ import numpy as np
 import pygame
 
 from MarblingApp.core.canvas import Canvas
-from MarblingApp.gui.shader.shader_utils import triangulate_polygon, create_dashed_circle, normalize, create_circle
+from MarblingApp.gui.shader.shader_utils import triangulate_polygon, create_dashed_circle, normalize, create_circle, \
+    load_shader
 
 
 class Renderer:
@@ -14,37 +15,8 @@ class Renderer:
         # ctx.enable(moderngl.MULTISAMPLE)
 
         self.program = self.ctx.program(
-            vertex_shader="""
-#version 330
-
-in vec2 in_vert;
-in vec3 in_color;
-
-out vec3 v_color;
-
-void main()
-{
-    gl_Position = vec4(in_vert, 0.0, 1.0);
-    v_color = in_color;
-}
-            """,
-
-            fragment_shader="""
-#version 330
-
-uniform int debug_mode;
-in vec3 v_color;
-
-out vec4 fragColor;
-
-void main()
-{   
-    if(debug_mode == 1)
-        fragColor = vec4(1,0,0, 1.0);
-    else  
-        fragColor = vec4(v_color, 1.0);
-}
-            """
+            vertex_shader=load_shader("gui/shader/shaders/basic.vert"),
+            fragment_shader=load_shader("gui/shader/shaders/basic.frag")
         )
 
         self.canvas_vbo = None
@@ -185,3 +157,4 @@ void main()
             ],
             index_buffer=self.canvas_ibo
         )
+

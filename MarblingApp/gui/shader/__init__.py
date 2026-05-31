@@ -8,8 +8,13 @@ from MarblingApp.gui.shader.renderer import Renderer
 from MarblingApp.gui.shader.shader_utils import triangulate_polygon, create_circle, create_dashed_circle
 from MarblingApp.monitoring.performance_logger import PerformanceLogger
 
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 800
+import ctypes
+user32 = ctypes.windll.user32
+screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+
+
+SCREEN_WIDTH, SCREEN_HEIGHT = screensize
+
 
 BG_COLOR = (10/255, 13/255, 20/255)
 
