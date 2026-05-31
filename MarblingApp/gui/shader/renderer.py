@@ -9,14 +9,18 @@ from MarblingApp.gui.shader.shader_utils import triangulate_polygon, create_dash
 
 class Renderer:
     def __init__(self, canvas:Canvas, screen: pygame.Surface):
+        self.canvas = canvas
+        self.screen = screen
+
+
         self.ctx = moderngl.create_context()
 
         self.ctx.enable(moderngl.BLEND)
         # ctx.enable(moderngl.MULTISAMPLE)
 
         self.program = self.ctx.program(
-            vertex_shader=load_shader("gui/shader/shaders/basic.vert"),
-            fragment_shader=load_shader("gui/shader/shaders/basic.frag")
+            vertex_shader=load_shader("shaders/basic.vert"),
+            fragment_shader=load_shader("shaders/basic.frag")
         )
 
         self.canvas_vbo = None
@@ -31,10 +35,35 @@ class Renderer:
             ]
         )
 
+        self.fbo = self.ctx.framebuffer(
+            color_attachments=[
+                self.ctx.texture(
+                    (self.screen.get_width(), self.screen.get_height()),
+                    4
+                )
+            ]
+        )
+
+        self.final_program = self.ctx.program(
+            vertex_shader=load_shader("shaders/post.vert"),
+            fragment_shader=load_shader("shaders/post_multi.frag")
+        )
+
+        self.quad_vbo = self.ctx.buffer(np.array([
+            -1, -1,
+            1, -1,
+            -1, 1,
+            1, 1,
+        ], dtype="f4").tobytes())
+
+        self.quad_vao = self.ctx.vertex_array(
+            self.final_program,
+            [(self.quad_vbo, "2f", "in_pos")]
+        )
+
         # other stuff
 
-        self.canvas = canvas
-        self.screen = screen
+
 
         self.bg_color = (10/255, 13/255, 20/255)
 
@@ -45,21 +74,27 @@ class Renderer:
             self.canvas.reset_dirty_flag()
             self.rebuild_canvas_mesh()
 
-
-
-        # DRAW
-
+        # =========================
+        # PASS 1: Scene rendern in FBO
+        # =========================
+        self.fbo.use()
         self.ctx.clear(*self.bg_color)
 
         self.program["debug_mode"] = 0
         if self.canvas_vao is not None:
             self.canvas_vao.render(moderngl.TRIANGLES)
+
         self.render_cursor(self.canvas.current_brush.radius)
 
-        #if self.canvas_vao is not None:
-        #    self.program["debug_mode"] = 1
-        #    self.canvas_vao.render(moderngl.LINES)
+        # =========================
+        # PASS 2: Screen + Glow
+        # =========================
+        self.ctx.screen.use()
 
+        self.fbo.color_attachments[0].use(location=0)
+        self.final_program["scene"] = 0
+
+        self.quad_vao.render(moderngl.TRIANGLE_STRIP)
 
 
     def render_cursor(self, radius):
