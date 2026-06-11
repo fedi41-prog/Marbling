@@ -86,6 +86,10 @@ class Renderer:
 
         self.render_cursor(self.canvas.current_brush.radius)
 
+        # self.program["debug_mode"] = 1
+        # if self.canvas_vao is not None:
+        #     self.canvas_vao.render(moderngl.LINES)
+
         # =========================
         # PASS 2: Screen + Glow
         # =========================

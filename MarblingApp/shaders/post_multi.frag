@@ -10,6 +10,14 @@ float rand(vec2 co)
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
+float diagonalPattern(vec2 uv)
+{
+    float spacing = 10.0; // Abstand zwischen Linien
+
+    float v = mod(uv.x + uv.y, spacing);
+
+    return v < 5.0 ? 1.0 : 0.0; // Linienbreite 2 Pixel
+}
 
 float diff(vec3 col1, vec3 col2) {
     return (abs(col1.r-col2.r)+abs(col1.g-col2.g)+abs(col1.b-col2.b))/3;
@@ -91,17 +99,26 @@ void main() {
     vec3 col = texture(scene, v_uv).rgb;
 
     float brightness = max(max(col.r, col.g), col.b);
+    vec2 pos = gl_FragCoord.xy;
+
+    float pattern1 = diagonalPattern(pos);
+
 
     if (v_uv.y < 0.5)
         if (v_uv.x < 0.5)
             //f_color = vec4(brightness, brightness, brightness, 1);
             f_color = vec4(blur(0.002, 7, 5), 1);
         else
-            f_color = vec4(glow(0.002, 3, 50), 1);
+            f_color = vec4(glow(0.002, 5, 120), 1);
     else
         if (v_uv.x < 0.5)
             f_color = vec4(col, 1);
-        else
+        else {
             //f_color = vec4(vec3(1,1,1)-col, 1);
-            f_color = vec4(sharpen(0.001, 1, 50), 1);
+            col = sharpen(0.001, 1, 50);
+            if (brightness > 0.2)
+                col -= pattern1;
+            f_color = vec4(col, 1);
+
+        }
 }
